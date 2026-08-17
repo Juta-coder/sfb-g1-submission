@@ -19,4 +19,4 @@ Deploy ผ่าน Netlify Drop (app.netlify.com/drop) — ลากทั้�
 ## ข้อมูลจะถูกบันทึกไปที่ไหน
 ทุกครั้งที่พนักงานกด submit ระบบจะ:
 1. สร้าง PDF ให้โหลดลงเครื่อง (ไว้ส่งอีเมลให้หัวหน้างานรับรอง)
-2. ส่งข้อมูลไปบันทึกที่ Google Sheet "Gate 1 : Project details submittion" ผ่าน Google Apps Script (ดูโค้ด receiver ได้ที่ AppsScript_Code.gs — ไม่ได้เก็บไว้ใน repo นี้เพราะมีคำแนะนำการ deploy)
+2. ส่งข้อมูลไปบันทึกที่ Google Sheet "Gate 1 : Project details submission" ผ่าน Google Apps Script (ดูโค้ด receiver ได้ที่ AppsScript_Code.gs — ไม่ได้เก็บไว้ใน repo นี้เพราะมีคำแนะนำการ deploy)
