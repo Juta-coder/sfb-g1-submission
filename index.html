@@ -223,12 +223,31 @@
 
     <div class="next-step-box">
       <b>ขั้นตอนต่อไป:</b><br>
-      1. เปิดอีเมลของคุณ แล้วแนบไฟล์ PDF ที่เพิ่งดาวน์โหลด<br>
+      1. เปิดอีเมลของคุณ (Outlook / Gmail) แล้วแนบไฟล์ PDF ที่เพิ่งดาวน์โหลด<br>
       2. ส่งถึงหัวหน้างานของคุณ: <b id="doneSponsorName"></b> เพื่อขอให้ตรวจสอบและยืนยันข้อมูล<br>
       3. ขอให้หัวหน้างานตรวจสอบตัวเลขแล้ว<b>ตอบกลับอีเมล (Reply)</b> เพื่อยืนยันว่าตัวเลขถูกต้อง — ถือเป็นการรับรองแทนการเซ็นชื่อ<br>
       4. CC ถึง jutaporn.lu@thaiwah.com ด้วยทุกครั้ง เพื่อให้ทีมงานติดตามได้
     </div>
-    <button class="btn-primary" id="openEmailBtn" type="button" style="margin-top:16px;width:100%;padding:13px">เปิดฉบับร่างอีเมล (ใส่อีเมลหัวหน้างานเอง)</button>
+
+    <div class="next-step-box">
+      <b>เนื้อหาอีเมลสำเร็จรูป — กดคัดลอกแล้วไปวางในอีเมลของคุณเอง:</b>
+      <div style="margin-top:10px">
+        <div class="hint" style="margin-bottom:4px">หัวข้อ (Subject)</div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="emailSubjectText" readonly style="flex:1;font-size:12.5px;background:#fff">
+          <button class="btn-ghost" type="button" data-copy="emailSubjectText" style="flex:none">คัดลอก</button>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div class="hint" style="margin-bottom:4px">เนื้อหา (Body)</div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <textarea id="emailBodyText" readonly style="flex:1;font-size:12.5px;min-height:120px;background:#fff"></textarea>
+          <button class="btn-ghost" type="button" data-copy="emailBodyText" style="flex:none">คัดลอก</button>
+        </div>
+      </div>
+      <div class="hint" style="margin-top:6px">หมายเหตุ: ปุ่มด้านล่าง "เปิดฉบับร่างอีเมล" จะใช้งานได้ก็ต่อเมื่อเครื่องนี้ตั้งโปรแกรมอีเมลเริ่มต้นไว้ (เช่น Outlook Desktop) — ถ้าใช้ Outlook/Gmail แบบเว็บ ให้กดคัดลอกด้านบนไปวางเองแทน จะชัวร์กว่า</div>
+    </div>
+    <button class="btn-primary" id="openEmailBtn" type="button" style="margin-top:16px;width:100%;padding:13px">ลองเปิดฉบับร่างอีเมล (ใส่อีเมลหัวหน้างานเอง)</button>
   </div>
 
 </div>
@@ -536,17 +555,36 @@ document.getElementById('g1Form').addEventListener('submit', function(e){
     document.getElementById('saveWarning').style.display = savedToSheet ? 'none' : 'block';
     document.getElementById('successPanel').style.display = 'block';
 
+    // เนื้อหาอีเมลแบบข้อความล้วน — ใช้ทั้งในกล่อง "คัดลอก" และในปุ่ม mailto
+    const emailSubject = (currentTeam.isTest ? '[TEST] ' : '') + 'ขอความรับรองข้อมูล G1 — ทีม ' + currentTeam.name + ' (' + currentTeam.code + ')';
+    const emailBody =
+      'เรียน [เติมชื่อผู้รับรองโครงการ]\n\n' +
+      'รบกวนตรวจสอบไฟล์ PDF ที่แนบ (ข้อมูลโครงการทีม ' + currentTeam.name + ' รหัส ' + currentTeam.code + ') ' +
+      'และตอบกลับอีเมลนี้เพื่อยืนยันว่าตัวเลข Baseline และแผนงานถูกต้อง\n\n' +
+      '(อย่าลืมแนบไฟล์ PDF ที่ดาวน์โหลดไว้ก่อนส่ง — อีเมลจะไม่แนบให้อัตโนมัติ และ CC : jutaporn.lu@thaiwah.com)\n\n' +
+      'ขอบคุณครับ/ค่ะ';
+
+    document.getElementById('emailSubjectText').value = emailSubject;
+    document.getElementById('emailBodyText').value = emailBody;
+
+    // ปุ่มคัดลอก — ใช้ clipboard API ถ้ามี ไม่งั้น fallback เป็น select+copy แบบเก่า
+    document.querySelectorAll('[data-copy]').forEach(btn => {
+      btn.onclick = () => {
+        const el = document.getElementById(btn.getAttribute('data-copy'));
+        const text = el.value;
+        const done = () => { const old = btn.textContent; btn.textContent = 'คัดลอกแล้ว ✓'; setTimeout(() => btn.textContent = old, 1500); };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(text).then(done).catch(() => { el.select(); document.execCommand('copy'); done(); });
+        } else {
+          el.select(); document.execCommand('copy'); done();
+        }
+      };
+    });
+
     document.getElementById('openEmailBtn').onclick = () => {
-      const subject = encodeURIComponent((currentTeam.isTest ? '[TEST] ' : '') + 'ขอความรับรองข้อมูล G1 — ทีม ' + currentTeam.name + ' (' + currentTeam.code + ')');
-      const body = encodeURIComponent(
-        'เรียนคุณ ' + (currentTeam.sponsorName || '') + '\n\n' +
-        'รบกวนตรวจสอบไฟล์ PDF ที่แนบ (ข้อมูลโครงการทีม ' + currentTeam.name + ' รหัส ' + currentTeam.code + ') ' +
-        'และตอบกลับอีเมลนี้เพื่อยืนยันว่าตัวเลข Baseline และแผนงานถูกต้อง\n\n' +
-        '(อย่าลืมแนบไฟล์ PDF ที่ดาวน์โหลดไว้ก่อนส่ง — อีเมลจะไม่แนบให้อัตโนมัติ)\n\n' +
-        'ขอบคุณครับ/ค่ะ'
-      );
       // ไม่ใส่ที่อยู่ผู้รับล่วงหน้า — ผู้กรอกเป็นคนพิมพ์อีเมลหัวหน้างานของตัวเองตอนส่งจริง
-      window.location.href = 'mailto:?cc=jutaporn.lu@thaiwah.com&subject=' + subject + '&body=' + body;
+      // หมายเหตุ: ใช้ได้เฉพาะเครื่องที่ตั้งโปรแกรมอีเมลเริ่มต้นไว้ — ถ้าใช้ Outlook/Gmail เว็บ ปุ่มนี้อาจไม่มีผลใดๆ ให้ใช้กล่องคัดลอกด้านบนแทน
+      window.location.href = 'mailto:?cc=jutaporn.lu@thaiwah.com&subject=' + encodeURIComponent(emailSubject) + '&body=' + encodeURIComponent(emailBody);
     };
     window.scrollTo({top:0, behavior:'smooth'});
   }
